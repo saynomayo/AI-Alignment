@@ -13,8 +13,9 @@ label_map = {
     "NEGATIVE": "Disagree"
 }
 
-results = []
-failures =[]
+successes = []
+failures = []
+low_confidences = []
 
 # take a stance on the dataset
 def takeStance():
@@ -52,20 +53,26 @@ def takeStance():
                 "stance_correct": is_correct_stance,
             })
 
-        results.append({
-            "text": text,
-            "predicted_stance": mapped_stance,
-            "confidence": confidence,
-            "actual_stance": true_stance,
-            "stance_correct": is_correct_stance,
-            "predicted_alignment": predicted_alignment,
-            "actual_alignment": true_alignment,
-            "alignment_correct": predicted_alignment == true_alignment
-        })
+        if confidence < 0.7:
+            low_confidences.append({
+                "text": text,
+                "confidence": confidence,
+            })
+        if confidence >= 0.7 and is_correct_stance:
+            successes.append({
+                "text": text,
+                "predicted_stance": mapped_stance,
+                "confidence": confidence,
+                "actual_stance": true_stance,
+                "stance_correct": is_correct_stance,
+            })
+
 
 takeStance()
 
 failures_df = pd.DataFrame(failures)
-results_df = pd.DataFrame(results)
-results_df.to_csv("stance_alignment_output.csv", index=False)
+successes_df = pd.DataFrame(successes)
+lowconfidences_df = pd.DataFrame(low_confidences)
+successes_df.to_csv("successful_alignments_output.csv", index=False)
 failures_df.to_csv("failed_alignments.csv", index=False)
+lowconfidences_df.to_csv("low_confidence_alignments", index=False)
